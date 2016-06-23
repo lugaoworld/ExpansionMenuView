@@ -20,10 +20,6 @@ import java.util.Map;
  * Created by lugaoworld on 2016/6/22.
  */
 
-
-/**
- * Created by meicai on 2016/6/18.
- */
 public class ExpansionMenuView extends View implements View.OnTouchListener/*,ValueAnimator.AnimatorUpdateListener*/ {
 
     private Paint mPaint;
