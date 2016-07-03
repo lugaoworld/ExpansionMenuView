@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <attr name="text_normal_color" format="color"></attr>
+    <attr name="text_selected_color" format="color"></attr>
+    <attr name="background_color" format="color"></attr>
+    
+    <declare-styleable name="ExpansionMenuView">
+        <attr name="text_normal_color"></attr>
+        <attr name="text_selected_color"></attr>
+        <attr name="background_color"></attr>
+    </declare-styleable>
+</resources>

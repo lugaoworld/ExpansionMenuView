@@ -7,7 +7,8 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.lugaoworld.expansionmenuview.MainActivity">
+    xmlns:lugaoworld="http://schemas.android.com/apk/res-auto"
+    tools:context="com.lugaoworld.demo.MainActivity">
 
     <Button
         android:id="@+id/id_btn"
@@ -19,12 +20,29 @@
         android:textSize="20sp"
         android:paddingBottom="10dp"
         android:text="点我更新菜单数据"
-        android:layout_centerInParent="true"/>
+        android:layout_marginTop="80dp"
+        android:layout_centerHorizontal="true"/>
 
-    <com.lugaoworld.expansionmenuviewl.ExpansionMenuView
+    <com.lugaoworld.expansionmenuview.ExpansionMenuView
         android:id="@+id/id_expanmenuview"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        lugaoworld:background_color="@color/color_red"
+        lugaoworld:text_normal_color="@color/color_gray"
+        lugaoworld:text_selected_color="@color/color_white"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_gravity="right|bottom"
+        android:layout_marginBottom="160dp"
+        android:layout_marginRight="60dp" />
+
+    <com.lugaoworld.expansionmenuview.ExpansionMenuView
+        android:id="@+id/id_expanmenuview2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        lugaoworld:background_color="@color/color_blue"
+        lugaoworld:text_normal_color="@color/color_gray"
+        lugaoworld:text_selected_color="@color/color_white"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
         android:layout_gravity="right|bottom"

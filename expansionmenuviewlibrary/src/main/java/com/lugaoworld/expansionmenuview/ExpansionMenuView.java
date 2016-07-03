@@ -1,7 +1,8 @@
-package com.lugaoworld.expansionmenuviewl;
+package com.lugaoworld.expansionmenuview;
 
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -28,8 +29,9 @@ public class ExpansionMenuView extends View implements View.OnTouchListener/*,Va
     private int mRadius = 70;
     private float mTextSize = 12f;
     boolean mIsExpan = false;
-    private final int CHECKED_COLOR = Color.WHITE;
-    private final int UNCHECKED_COLOR = Color.GRAY;
+    private int mBackgroundColor;
+    private  int mSelectedTextColor = Color.WHITE;
+    private  int mNormalTextColor = Color.GRAY;
     private int ANIMATION_DURATION = 200;
     int mWidth;
     int mHeight;
@@ -57,21 +59,30 @@ public class ExpansionMenuView extends View implements View.OnTouchListener/*,Va
     public ExpansionMenuView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
-        init(context);
+
+        TypedArray typedArray = context.getTheme().obtainStyledAttributes(attrs, R.styleable.ExpansionMenuView, defStyleAttr,0);
+
+        mBackgroundColor = typedArray.getColor(R.styleable.ExpansionMenuView_background_color,Color.RED);
+        mNormalTextColor = typedArray.getColor( R.styleable.ExpansionMenuView_text_normal_color,Color.WHITE);
+        mSelectedTextColor = typedArray.getColor( R.styleable.ExpansionMenuView_text_selected_color,Color.GRAY);
+
+        typedArray.recycle();
+
+        initPaint(context);
     }
 
-    private void init(Context context) {
+    private void initPaint(Context context) {
 
         mPaint = new Paint();
         mTextPaint = new Paint();
         mLinePaint = new Paint();
 
         mPaint.setAntiAlias(true);
-        mPaint.setColor(Color.RED);
+        mPaint.setColor(mBackgroundColor);
         mPaint.setStyle(Paint.Style.FILL);
 
         mTextPaint.setAntiAlias(true);
-        mTextPaint.setColor(CHECKED_COLOR);
+        mTextPaint.setColor(mSelectedTextColor);
         mTextPaint.setStyle(Paint.Style.FILL);
         mTextPaint.setTextSize(sp2px(context, mTextSize));
 
@@ -160,28 +171,32 @@ public class ExpansionMenuView extends View implements View.OnTouchListener/*,Va
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        if(mMenuArray == null || mMenuTextSize == null)
+            return;
+
         Log.i("AA", "onDraw mWidth:" + mWidth);
+        mPaint.setAlpha(80);
         canvas.drawRoundRect(mOval, mRadius, mRadius, mPaint);////第二个参数是x半径，第三个参数是y半径
         if (getExpanState()) {
 
             for (int i = 0; i < mMenuSize - 1; i++) {
                 if (i == mExpanCloseWordIndex) {
-                    mTextPaint.setColor(CHECKED_COLOR);
+                    mTextPaint.setColor(mSelectedTextColor);
                 } else {
-                    mTextPaint.setColor(UNCHECKED_COLOR);
+                    mTextPaint.setColor(mNormalTextColor);
                 }
                 canvas.drawText(mMenuArray[i], i * 2 * mRadius + mRadius - mMenuTextSize[i][0] / 2, mRadius + mMenuTextSize[i][1] / 2, mTextPaint);
                 canvas.drawLine((i + 1) * 2 * mRadius - mLineWidthSize / 2, mRadius - mMenuTextSize[i][1] / 2, (i + 1) * 2 * mRadius - mLineWidthSize / 2, mRadius + mMenuTextSize[i][1] / 2, mLinePaint);
             }
             if (mMenuSize - 1 == mExpanCloseWordIndex) {
-                mTextPaint.setColor(CHECKED_COLOR);
+                mTextPaint.setColor(mSelectedTextColor);
             } else {
-                mTextPaint.setColor(UNCHECKED_COLOR);
+                mTextPaint.setColor(mNormalTextColor);
             }
             canvas.drawText(mMenuArray[mMenuSize - 1], (mMenuSize - 1) * 2 * mRadius + mRadius - mMenuTextSize[mMenuSize - 1][0] / 2, mRadius + mMenuTextSize[mMenuSize - 1][1] / 2, mTextPaint);
 
         } else {
-            mTextPaint.setColor(CHECKED_COLOR);
+            mTextPaint.setColor(mSelectedTextColor);
             canvas.drawText(mMenuArray[mExpanCloseWordIndex], mRadius - mMenuTextSize[mExpanCloseWordIndex][0] / 2, mRadius + mMenuTextSize[mExpanCloseWordIndex][1] / 2, mTextPaint);
         }
     }
@@ -192,24 +207,29 @@ public class ExpansionMenuView extends View implements View.OnTouchListener/*,Va
         switch (event.getAction()) {
             case MotionEvent.ACTION_UP:
 
-                if (getExpanState()) {
+                if (getExpanState()) { //to close
                     Log.i("AA", "getExpanState 1");
                     mIsExpan = false;
                     int pos = caluePosByEvent(event.getX());
                     mExpanCloseWordIndex = pos - 1;
 
-                    if (pos != -1) {
+                    if (pos != -1 && listener != null) {
                         listener.selected(mMenuArray[pos - 1], pos);
-                        startExpanAnimation(1);
+                        startExpanAnimation();
                     }
-                } else {
-                    if (mMenuSize == 1) {
+                } else {  //to open
+                    if (mMenuSize == 1 && listener != null) {
                         listener.selected(mMenuArray[0], 1);
                         break;
                     }
+
+                    if(listener != null){
+                        listener.autoclose();
+                    }
+
                     Log.i("AA", "getExpanState 2");
                     mIsExpan = true;
-                    startExpanAnimation(0);
+                    startExpanAnimation();
                 }
                 break;
         }
@@ -239,6 +259,7 @@ public class ExpansionMenuView extends View implements View.OnTouchListener/*,Va
     public interface OnMenuItemSelectListener {
 
         void selected(String menu, int position);
+        void autoclose();
     }
 
     public void AnimationUpdate(float value) {
@@ -248,25 +269,35 @@ public class ExpansionMenuView extends View implements View.OnTouchListener/*,Va
             Log.i("AA", "AnimationUpdate 1 mInitLeft value:" + mInitLeft + "," + value);
             mOval.right = mMenuSize * 2 * mRadius;
             mOval.left = 0;
-            mEndLeft = (int) (mInitLeft - value);
+
+            int temp = (int) (mInitLeft - value);
+            if(temp <= mInitLeft - (mMenuSize - 1)*2*mRadius){
+                temp = mInitLeft - (mMenuSize - 1)*2*mRadius;
+            }else{
+                temp = (int) (mInitLeft - value);
+            }
+            mEndLeft = temp;
             setLeft(mEndLeft);
         } else {
             Log.i("AA", "AnimationUpdate 2  mOval.right value:" + mOval.right + "" + value);
             mOval.right = 2 * mRadius;
             mOval.left = 0;
-            setLeft((int) (mEndLeft + value));
+
+            int temp = (int) (mEndLeft + value);
+            if(temp >= mInitLeft){
+                temp = mInitLeft;
+            }else{
+                temp = (int) (mEndLeft + value);
+            }
+            setLeft(temp);
         }
         invalidate();
     }
 
-    private void startExpanAnimation(int directType) {
+    private void startExpanAnimation() {
 
         ValueAnimator mAnim = null;
-        if (directType == 0) {
-            mAnim = ValueAnimator.ofFloat(0, (mMenuSize - 1) * 2 * mRadius);
-        } else {
-            mAnim = ValueAnimator.ofFloat(0, (mMenuSize - 1) * 2 * mRadius);
-        }
+        mAnim = ValueAnimator.ofFloat(0, (mMenuSize - 1) * 2 * mRadius);
 
         ValueAnimator.AnimatorUpdateListener listener = new ValueAnimator.AnimatorUpdateListener() {
             public void onAnimationUpdate(ValueAnimator animation) {
@@ -279,8 +310,17 @@ public class ExpansionMenuView extends View implements View.OnTouchListener/*,Va
         mAnim.start();
     }
 
-    boolean getExpanState() {
+    public boolean getExpanState() {
         return mIsExpan;
+    }
+
+    public void autoClose(){
+
+        if(getExpanState()) {
+            mIsExpan = false;
+            startExpanAnimation();
+        }
+
     }
 
     public static int sp2px(Context context, float spValue) {
