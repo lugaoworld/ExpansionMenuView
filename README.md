@@ -12,13 +12,4 @@ Updating....
 
 compile 'com.lugaoworld:expansionmenuviewlibrary:1.0.0'
 
-###maven
-
-<dependency> 
-   <groupId>com.lugaoworld</groupId> </br>
-   <artifactId>expansionmenuviewlibrary</artifactId> </br>
-   <version>1.0.0</version> </br>
-   <type>pom</type> </br>
-</dependency>
-
 
