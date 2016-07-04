@@ -8,3 +8,8 @@ Updating....
 
 ## How to use？
 
+###gradle
+
+compile 'com.lugaoworld:expansionmenuviewlibrary:1.0.0'
+
+
